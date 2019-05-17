@@ -19,7 +19,8 @@ client.on("error", function (err) {
 });
 
 const hgetAsync = promisify(client.hget).bind(client)
-const hsetAsycn = promisify(client.hset).bind(client)
+const hsetAsync = promisify(client.hset).bind(client)
+const hvalsAsync = promisify(client.hvals).bind(client)
 
 /**
  * Init App
@@ -62,15 +63,16 @@ app.post('/mini', async (req, res) => {
     if (oldMinifiedOfURL){
       return res.send(JSON.stringify({ miniURL: oldMinifiedOfURL }))
     }
-    await hsetAsycn('original-to-minified', originalURL, minifiedURL)
-    await hsetAsycn('minified-to-original', minifiedURL, originalURL)
+    await hsetAsync('original-to-minified', originalURL, minifiedURL)
+    await hsetAsync('minified-to-original', minifiedURL, originalURL)
 
     const dataToBeSaved = {
       minifiedURL,
+      originalURL,
       users: [],
       views: 0
     }
-    await hsetAsycn('original-to-data', originalURL, JSON.stringify(dataToBeSaved))
+    await hsetAsync('original-to-data', originalURL, JSON.stringify(dataToBeSaved))
   } catch(error) {
     console.log(error)
   }
@@ -92,7 +94,7 @@ app.get('/g*', async (req, res) => {
     const updatedData = {...oldData}
     updatedData.users = oldData.users.concat({ ip: req.ip, device: req.headers["user-agent"], timestamp: Date() })
     updatedData.views = oldData.views + 1
-    await hsetAsycn('original-to-data', originalURL, JSON.stringify(updatedData))
+    await hsetAsync('original-to-data', originalURL, JSON.stringify(updatedData))
     res.send(JSON.stringify({ url: originalURL }))
   } catch(error){
     console.log(error)
@@ -104,11 +106,13 @@ app.get('/g*', async (req, res) => {
 
 app.get('/admin',async (req, res) => {
   try {
-    const allData = await hgetAsync('original-to-data')
+    console.log('trying!')
+    const allData = await hvalsAsync('original-to-data')
     console.log(allData)
     res.send(allData)
+    
   } catch(error) {
-
+    console.log(error)
   }
   
 })

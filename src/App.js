@@ -1,7 +1,8 @@
 import React from 'react'
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Route } from "react-router-dom";
 
 import { MainPage } from './components'
+import { AdminPage } from './components'
 
 export default class App extends React.Component {
 
@@ -10,6 +11,7 @@ export default class App extends React.Component {
       <Router>
         <Route path="/" exact component={MainPage} />
         <Route path='/g/:url' component={Redirector} />
+        <Route path='/admin' component={AdminPage} />
       </Router>
     )
   }
