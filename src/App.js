@@ -17,6 +17,7 @@ export default class App extends React.Component {
 }
 
 const Redirector = ({ match }) => {
+  let returnVal = <div/>
   fetch(`http://localhost:8080/g/${match.params.url}`, 
   { 
     method: 'GET', 
@@ -25,11 +26,14 @@ const Redirector = ({ match }) => {
     }
   }).then( a => {
     a.json().then(a => {
-      console.log(a)
-      // window.location.href = 'http://www.'+a.url
+      if (a.url)
+        window.location.href = a.url
+      else {
+        returnVal = <div>page not found</div>
+      }
     })
     // window.location = a.json().url
   })
 
-  return <div></div>
+  return returnVal
 }

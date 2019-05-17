@@ -4,6 +4,8 @@ const bodyParser = require('body-parser')
 const redis = require("redis")
 const { promisify } = require('util');
 
+const MY_WEB_PAGE_URL = 'http://localhost:3000'
+
 /**
  * Init Redis
  */
@@ -24,7 +26,7 @@ const hsetAsycn = promisify(client.hset).bind(client)
  */
 const app = express();
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: MY_WEB_PAGE_URL,
   optionsSuccessStatus: 200
 }
 app.use(cors(corsOptions))
@@ -45,11 +47,20 @@ app.post('/mini', async (req, res) => {
     originalURL = rawURL
   else 
     originalURL = `http://${rawURL}`
-  const minifiedURL = rawURL + '-minified'
+  let minifiedURL = `${MY_WEB_PAGE_URL}/g/${hash(originalURL)}`
+  
+  let newURL = originalURL
+  while ( await hgetAsync('minified-to-original', minifiedURL)){
+    newURL = newURL + ' '
+    const newHashKey = hash(newURL)
+    minifiedURL = `${MY_WEB_PAGE_URL}/g/${newHashKey}`
+  }
+
   try {
     const oldMinifiedOfURL = await hgetAsync('original-to-minified', originalURL)
+    console.log('old minified ',oldMinifiedOfURL)
     if (oldMinifiedOfURL){
-      return res.send(oldMinifiedOfURL)
+      return res.send(JSON.stringify({ miniURL: oldMinifiedOfURL }))
     }
     await hsetAsycn('original-to-minified', originalURL, minifiedURL)
     await hsetAsycn('minified-to-original', minifiedURL, originalURL)
@@ -65,14 +76,14 @@ app.post('/mini', async (req, res) => {
   }
   res.setHeader('Content-Type', 'application/json')
   res.status(200)
-  res.send(minifiedURL)
+  res.send(JSON.stringify({ miniURL: minifiedURL }))
 })
 
 
 
 app.get('/g*', async (req, res) => {
-  const url = req.url.split('/')
-  const minifiedURL = url[url.length - 1]
+  const minifiedURL = `${MY_WEB_PAGE_URL}${req.url}`
+  console.log('getting ', minifiedURL)
   try {
     const originalURL = await hgetAsync('minified-to-original', minifiedURL)
     if (!originalURL) throw new Error(404)
@@ -91,10 +102,25 @@ app.get('/g*', async (req, res) => {
 
 
 
-app.get('/admin', (req, res) => {
-  client.get('URLS', (e,a) => {res.send(JSON.stringify(a))})
+app.get('/admin',async (req, res) => {
+  try {
+    const allData = await hgetAsync('original-to-data')
+    console.log(allData)
+    res.send(allData)
+  } catch(error) {
+
+  }
   
 })
 
 
 app.listen(8080, () => console.log('Job Dispatch API running on port 8080!'))
+
+
+const hash = (key) => {
+  const hash = Array.from(key).reduce(
+    (hashAccumulator, keySymbol) => (hashAccumulator + keySymbol.charCodeAt(0)),
+    0,
+  )
+  return (hash % 10000).toString()
+}
