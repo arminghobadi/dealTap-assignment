@@ -1,0 +1,48 @@
+.admin-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.admin-page > .each-entry {
+  display: flex;
+  flex-direction: column;
+  margin-top: 10px;
+}
+
+.admin-page > .each-entry > .url-info {
+  display: flex;
+  flex-direction: row;
+  padding: 10px; 
+  background-color: lightgray;
+  justify-content: space-between;
+}
+
+.admin-page > .each-entry > .url-info .data {
+  font-weight: bold;
+  max-width: 500px;
+  overflow-wrap: break-word;
+}
+
+.admin-page > .each-entry > .users > .each-user {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  width: 90%
+}
+
+.admin-page > .each-entry > .users > .each-user > .each-user-section .tag {
+  font-weight: bold;
+}
+
+.admin-page > .no-entry {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  font-size: 25px;
+  font-weight: bold;
+}

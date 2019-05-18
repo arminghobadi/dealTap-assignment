@@ -39,11 +39,13 @@ app.use(function(req, res, next) {
   next();
 });
 
+
+
+
 app.post('/mini', async (req, res) => {
-  // error
   const rawURL = req.body.url
   let originalURL
-  const [protocol, ...restOfUrl] = rawURL.split('://')
+  const [ protocol, ...restOfUrl ] = rawURL.split('://')
   if (protocol === 'http' || protocol === 'https')
     originalURL = rawURL
   else 
@@ -59,10 +61,10 @@ app.post('/mini', async (req, res) => {
 
   try {
     const oldMinifiedOfURL = await hgetAsync('original-to-minified', originalURL)
-    console.log('old minified ',oldMinifiedOfURL)
     if (oldMinifiedOfURL){
       return res.send(JSON.stringify({ miniURL: oldMinifiedOfURL }))
     }
+
     await hsetAsync('original-to-minified', originalURL, minifiedURL)
     await hsetAsync('minified-to-original', minifiedURL, originalURL)
 
@@ -73,6 +75,7 @@ app.post('/mini', async (req, res) => {
       views: 0
     }
     await hsetAsync('original-to-data', originalURL, JSON.stringify(dataToBeSaved))
+
   } catch(error) {
     console.log(error)
   }
@@ -81,45 +84,37 @@ app.post('/mini', async (req, res) => {
   res.send(JSON.stringify({ miniURL: minifiedURL }))
 })
 
-
-
 app.get('/g*', async (req, res) => {
   const minifiedURL = `${MY_WEB_PAGE_URL}${req.url}`
-  console.log('getting ', minifiedURL)
+
   try {
     const originalURL = await hgetAsync('minified-to-original', minifiedURL)
     if (!originalURL) throw new Error(404)
+
     const oldDataString = await hgetAsync('original-to-data', originalURL)
     const oldData = JSON.parse(oldDataString)
+
     const updatedData = {...oldData}
     updatedData.users = oldData.users.concat({ ip: req.ip, device: req.headers["user-agent"], timestamp: Date() })
     updatedData.views = oldData.views + 1
+
     await hsetAsync('original-to-data', originalURL, JSON.stringify(updatedData))
     res.send(JSON.stringify({ url: originalURL }))
+
   } catch(error){
     console.log(error)
   }
   
 })
 
-
-
 app.get('/admin',async (req, res) => {
   try {
-    console.log('trying!')
     const allData = await hvalsAsync('original-to-data')
-    console.log(allData)
     res.send(allData)
-    
   } catch(error) {
     console.log(error)
   }
-  
 })
-
-
-app.listen(8080, () => console.log('Job Dispatch API running on port 8080!'))
-
 
 const hash = (key) => {
   const hash = Array.from(key).reduce(
@@ -128,3 +123,5 @@ const hash = (key) => {
   )
   return (hash % 10000).toString()
 }
+
+app.listen(8080, () => console.log('Job Dispatch API running on port 8080!'))

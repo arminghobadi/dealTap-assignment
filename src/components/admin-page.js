@@ -1,7 +1,6 @@
 import React from 'react'
 
-
-
+import './admin-page.css'
 
 export class AdminPage extends React.Component {
 
@@ -10,14 +9,14 @@ export class AdminPage extends React.Component {
   }
 
   async componentDidMount(){
-    const fetchRes = await fetch(`http://localhost:8080/admin`, 
-    { 
-      method: 'GET', 
-      headers: {
-        "Content-Type": "application/json"
-      }
-    })
     try {
+      const fetchRes = await fetch(`http://localhost:8080/admin`, 
+        { 
+          method: 'GET', 
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
       let res = await fetchRes.json()
       res = res.map( i => JSON.parse(i))
       this.setState({ data: res })
@@ -26,45 +25,76 @@ export class AdminPage extends React.Component {
     }
   }
 
-  eachUser(user){
+  eachUser(user, key){
     return (
-      <div>
+      <div className='each-user' key={key}>
         {
           Object.keys(user).map((k,i) => (
-            <div key={i} className='each-user'>
+            <div key={i} className='each-user-section'>
               <div className={`users-${k}`}>
-                <span className='tag'>{k}: </span>
+                <span className='tag'>{k.toUpperCase()}: </span>
                 <span className='value'>{user[k]}</span>
               </div>
             </div>
           ))
         }
-        {/* ip: {user.ip},
-        <br/> device: {user.device}
-        <br/> timestamp: {user.timestamp} */}
       </div>
     )
   }
 
   eachEntry(entry){
+    const { minifiedURL, originalURL, views, users } = entry
+    const arr = minifiedURL.split('/')
+    const key = arr[arr.length - 1]
     return (
-      <div>
-        minified: {entry.minifiedURL}
-        <br/> original: {entry.originalURL}
-        <br/> views: {entry.views}
-        <br/> users: {entry.users.map( user => this.eachUser(user))}
+      <div key={key} className='each-entry'>
+        <div className='url-info'>
+          <div className='minified-url'>
+            <div className='text'>
+              Minified URL:
+            </div>
+            <div className='data'>
+              {minifiedURL}
+            </div>
+          </div>
+          <div className='original-url'>
+            <div className='text'>
+              Original URL:
+            </div>
+            <div className='data'>
+              {originalURL}
+            </div>
+          </div>
+          <div className='views'>
+          <div className='text'>
+              Views:
+            </div>
+            <div className='data'>
+              {views}
+            </div>
+          </div>
+        </div>
+        <div className='users'>
+          {users.map( (user, i) => this.eachUser(user, i))}
+        </div>
       </div>
     )
   }
 
   render() {
-    const { data } = this.state;
-  
+    const { data } = this.state
     return (
-      <div className='main-page'>
-        { data.map( entry => this.eachEntry(entry)) }
+      <div className='admin-page'>
+        { 
+          data.length ? 
+            data.map( entry => this.eachEntry(entry)) 
+          :
+            <div className='no-entry'>
+              No Entry Found...
+            </div>
+        }
       </div>
-    );
+    )
   }
 }
 
