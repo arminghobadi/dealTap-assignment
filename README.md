@@ -7,4 +7,6 @@ Please make sure you have `docker` and `node` and `yarn` installed on your machi
 - To run the client, first install the dependencies by running `yarn` from the main directory.
 Then run `yarn start`
 
-#### To view all entries of users and see user activity, go to `/admin` route
+### To view all entries of users and see user activity, go to `/admin` route
+
+#### To access the Redis Commander, go to port `8081`
